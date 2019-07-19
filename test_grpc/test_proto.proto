@@ -1,0 +1,17 @@
+syntax = "proto3";
+package test;
+
+service Vergil
+{
+    rpc testhello (Vrequest) returns (Vresponse) {}
+}
+
+message Vrequest
+{
+    string request = 1;
+}
+
+message Vresponse
+{
+    string response = 1;
+}
