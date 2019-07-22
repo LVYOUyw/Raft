@@ -3,7 +3,8 @@ package test;
 
 service Vergil
 {
-    rpc testhello (Vrequest) returns (Vresponse) {}
+    rpc modify (Vrequest) returns (Vresponse) {}
+    rpc smodify (Vrequest) returns (Vresponse) {}
 }
 
 message Vrequest
