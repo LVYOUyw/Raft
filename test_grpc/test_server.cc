@@ -3,6 +3,9 @@
 #include <string>
 #include <grpcpp/grpcpp.h>
 #include <thread>
+#include <atomic>
+#include <vector>
+#include <unistd.h>
 #include "test_proto.grpc.pb.h"
 
 using grpc::Server;
@@ -15,15 +18,18 @@ using test::Vergil;
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
+std::vector<std::thread> Threads;
+int n,o=50051;
 
 class ServiceImpl final : public Vergil::Service 
 {
   public:
       ServiceImpl(std::uint16_t port) : port(port) 
       {
+        flag.store(false);
         key_name=std::to_string(port);
         std::uint16_t p = 50051;
-        for (int i = 1; i <=3 ; i++) 
+        for (int i = 1; i <= n; i++) 
         {
             if (p == port) {p++;continue;}
             std::shared_ptr<Channel> channel = grpc::CreateChannel("0.0.0.0:" + std::to_string(p),
@@ -33,6 +39,11 @@ class ServiceImpl final : public Vergil::Service
             p++;
         }
       } 
+      
+      void Heartbeat()
+      {
+            
+      }
         
       Status modify(ServerContext* context, const Vrequest* request, Vresponse* reply) override 
       {
@@ -64,8 +75,13 @@ class ServiceImpl final : public Vergil::Service
   
   private:
        std::string key_name;
+       int currentTerm,votedFor;
+       int commitIndex,lastApplied;
        std::uint16_t port;
        std::vector<std::unique_ptr<Vergil::Stub>> st;
+       std::vector<int> nextIndex;
+       std::vector<int> matchIndex;
+       std::atomic<bool> flag;
 };
 
 void RunServer(std::uint16_t port) {
@@ -76,16 +92,19 @@ void RunServer(std::uint16_t port) {
   builder.RegisterService(&service);
   std::unique_ptr<Server> server(builder.BuildAndStart());
   std::cout << "Server listening on " << server_address << std::endl;
+  std::thread t(&ServiceImpl::Heartbeat,&service);
   server->Wait();
 }
 
 int main(int argc, char** argv) 
 {
-  std::thread t1(RunServer,50051);
-  std::thread t2(RunServer,50052);
-  std::thread t3(RunServer,50053);
-  t1.join();
-  t2.join();
-  t3.join();
+  scanf("%d",&n);
+  for (int i=1;i<=n;i++) 
+  {
+    std::thread t(RunServer,o);
+    Threads.push_back(std::move(t));
+    o++;
+  }
+  for (int i=0;i<n;i++) Threads[i].join();
   return 0;
 }
