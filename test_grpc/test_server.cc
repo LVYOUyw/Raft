@@ -33,88 +33,21 @@ class ServiceImpl final : public Vergil::Service
         flag.store(false);
         currentTerm = votedFor = 0;
         key_name=std::to_string(port);
-        std::uint16_t p = 50051;
-        for (int i = 1; i <= n; i++) 
-        {
-            if (p == port) {p++;continue;}
-            std::shared_ptr<Channel> channel = grpc::CreateChannel("0.0.0.0:" + std::to_string(p),
-                                               grpc::InsecureChannelCredentials());
-            std::unique_ptr<Vergil::Stub> tmp = Vergil::NewStub(channel);
-            st.emplace_back(std::move(tmp));
-            p++;
-        }
       } 
       
-      void leader()
+      void modifytogether(uint16_t p) 
       {
-        AppendEntriesMessage req;
-        Reply rep;
+        std::shared_ptr<Channel> channel = grpc::CreateChannel("0.0.0.0:" + std::to_string(p),
+                                               grpc::InsecureChannelCredentials());
+        std::unique_ptr<Vergil::Stub> tmp = Vergil::NewStub(channel);
+        Vrequest req;
+        //req.set_request(s);
+        Vresponse rep;
         ClientContext cont;
-        req.set_term(currentTerm);
-        req.set_leaderID(std::to_string(port));
-        while (1) 
-        {
-            //这里也要并发
-            sleep(0.1);
-        }
-      }
-      
-      void Heartbeat()
-      {
-        auto startTime = clock();      
-        int timeout = rand() % 150 + 151;
-        while (1) 
-        {
-            currentTerm++;
-            if (flag.load()) 
-            {
-                startTime = clock(); 
-                flag.store(false);
-                timeout = rand() % 150 + 151;
-            }
-            
-            if ((double)(clock() - startTime / CLOCKS_PER_SEC) * 1000 > timeout)
-            {
-                 int cnt = 1;
-                 for (auto & stub_ : st) //这里要并发
-                 {
-                    RequestVoteMessage req;
-                    req.set_term(currentTerm);
-                    req.set_candidateID(std::to_string(port));
-                    /*
-                        need to set something more
-                    */
-                    Reply rep;
-                    ClientContext cont;
-                    Status status = stub_->RequestVote(&cont, req, &rep);
-                    if (!status.ok()) 
-                        std::cout << status.error_code() << ": " << status.error_message() << "\n";
-                    std::cout << rep.response() << "\n";
-                    if (rep -> ans()) cnt++;
-                    if (cnt > n / 2) leader();
-                 }
-            }
-        }
-      }
-      
-      Status RequestVote(ServerContext* context, const RequestVoteMessage* request, Reply* reply) override
-      {
-        reply.set_ans(true);
-        reply.set_term(currentTerm);
-        if (request -> term() < currentTerm) reply.set_ans(false);
-        else if (votedFor) reply.set_ans(false);
-        else votedFor = 1;
-        return Status::OK;
-      }
-      
-      Status AppendEntries(ServerContext* context, const AppendEntriesMessage* request,
-                           Reply* reply) override 
-      {
-        flag.store(true);
-        if (currentTerm < request -> term()) currentTerm = request -> term(); //currentTerm 共享 !!
-        reply.set_term(currentTerm);
-        reply.set_ans(true);
-        return Status::OK;
+        Status status = tmp->smodify(&cont, req, &rep);
+        if (!status.ok()) 
+            std::cout << status.error_code() << ": " << status.error_message() << "\n";
+        std::cout << rep.response() << "\n";
       }
         
       Status modify(ServerContext* context, const Vrequest* request, Vresponse* reply) override 
@@ -122,17 +55,18 @@ class ServiceImpl final : public Vergil::Service
         key_name = request -> request();
         std::string answer = std::to_string(port) + ": modify OK";
         reply->set_response(answer);
-        for (auto & stub_ : st) 
+        uint16_t  p = 50051;
+        std::string tt = request -> request();
+        std::vector<std::thread> Tds;
+        for (int i = 1; i <= n; i++) 
         {
-            Vrequest req;
-            req.set_request(request -> request());
-            Vresponse rep;
-            ClientContext cont;
-            Status status = stub_->smodify(&cont, req, &rep);
-            if (!status.ok()) 
-                std::cout << status.error_code() << ": " << status.error_message() << "\n";
-            std::cout << rep.response() << "\n";
+            printf("%d\n",i);
+            if (p == port) {p++;continue;}
+            std::thread t(&ServiceImpl::modifytogether,this,p);
+            Tds.push_back(std::move(t));
+            p++;
         }
+        for (int i = 0; i < n - 1; i++)  Tds[i].join();
         return Status::OK;
       }
       
@@ -149,7 +83,6 @@ class ServiceImpl final : public Vergil::Service
        int currentTerm,votedFor;
        int commitIndex,lastApplied;
        std::uint16_t port;
-       std::vector<std::unique_ptr<Vergil::Stub>> st;
        std::vector<int> nextIndex;
        std::vector<int> matchIndex;
        std::atomic<bool> flag;
@@ -165,7 +98,7 @@ void RunServer(std::uint16_t port)
   builder.RegisterService(&service);
   std::unique_ptr<Server> server(builder.BuildAndStart());
   std::cout << "Server listening on " << server_address << std::endl;
-  std::thread t(&ServiceImpl::Heartbeat,&service);
+ // std::thread t(&ServiceImpl::Heartbeat,&service);
   server->Wait();
 }
 
