@@ -37,12 +37,9 @@ PROTOS_PATH = .
 
 vpath %.proto $(PROTOS_PATH)
 
-all: system-check test_client test_server
+all: system-check  server
 
-test_client: test_proto.pb.o test_proto.grpc.pb.o test_client.o 
-	$(CXX) $^ $(LDFLAGS) -o $@
-
-test_server: test_proto.pb.o test_proto.grpc.pb.o test_server.o 
+server: test_proto.pb.o test_proto.grpc.pb.o main.o 
 	$(CXX) $^ $(LDFLAGS) -o $@
 
  .PRECIOUS: %.grpc.pb.cc
@@ -53,7 +50,7 @@ test_server: test_proto.pb.o test_proto.grpc.pb.o test_server.o
 	$(PROTOC) -I $(PROTOS_PATH) --cpp_out=. $<
 
 clean:
-	rm -f *.o *.pb.cc *.pb.h test_client test_server
+	rm -f *.o *.pb.cc *.pb.h  server
 
 
 # The following is to test your system and ensure a smoother experience.

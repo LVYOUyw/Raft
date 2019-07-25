@@ -1,0 +1,29 @@
+syntax = "proto3";
+package test;
+
+service Vergil
+{
+    rpc RequestVote (RequestVoteMessage) returns (Reply) {}
+    rpc AppendEntries (AppendEntriesMessage) returns (Reply) {}
+}
+
+message RequestVoteMessage
+{
+    int32 term = 1;
+    string candidateID = 2;
+    int32 lastLogIndex = 3;
+    int32 lastLogTerm = 4;
+}
+
+message AppendEntriesMessage
+{
+    int32 term = 1;
+    string leaderID = 2;
+}
+
+message Reply
+{
+    int32 term = 1;
+    bool ans = 2;
+}
+
