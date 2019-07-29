@@ -13,7 +13,7 @@ using grpc::ServerContext;
 using grpc::Status;
 using test::Vergil;
 int n;
-std::vector<Service> S;
+std::vector<Service> V;
 
 int main(int argc, char** argv) 
 {
@@ -22,6 +22,7 @@ int main(int argc, char** argv)
     {
         Service tmp;
         tmp.Start(50051 + i - 1);
+        V.emplace_back(std::move(tmp));
     }
    // for (int i=0;i<n;i++) T[i].join();
     return 0;
