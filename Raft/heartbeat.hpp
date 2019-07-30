@@ -1,9 +1,13 @@
 #include <boost/thread/mutex.hpp>
+#include <boost/thread/thread.hpp>
+#include <boost/chrono.hpp>
 #include <bits/stdc++.h>  
 
 class heartbeat
 {
     public:
+        
+        heartbeat() = default;
         
         template <class Func> 
         void initElection(Func &&f) 
@@ -16,14 +20,20 @@ class heartbeat
         {
             alive = std::forward<Func>(f);
         }
+        
+        void interrupt() 
+        {
+            th.interrupt();
+        }   
            
     
         void start() 
         {
             //boost::unique_lock<boost::mutex> lk(m);
-            th=boost::thread([lk=std::move(lk), f=election, g=alive, period=period] 
+            th=boost::thread([f=election, g=alive, period=period, s=state, repeat=repeat] 
             {
                 boost::this_thread::disable_interruption di;
+                int state=s;
                 do
                 {
                     if (state == 1) 
@@ -31,8 +41,7 @@ class heartbeat
                         try 
                         {
                             boost::this_thread::restore_interruption ri(di);
-                            period=std::rand()%150+150;
-                            boost::this_thread::sleep_for(boost::chromo::milliseconds(period));
+                            boost::this_thread::sleep_for(boost::chrono::milliseconds(std::rand()%150+150));
                         } 
                         catch (boost::thread_interrupted) 
                         {
@@ -61,8 +70,7 @@ class heartbeat
                         {
                             g();
                             boost::this_thread::restore_interruption ri(di);
-                            period=100;
-                            boost::this_thread::sleep_for(boost::chromo::milliseconds(period));
+                            boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
                         }
                         catch (...) 
                         {
@@ -70,21 +78,22 @@ class heartbeat
                             continue;
                         }
                     }
-                } while (repeat)
-            })        
+                } while (repeat);
+            });        
         }
 
         void stop()
         {
             repeat = 0;
             th.interrupt();
-            th.join();
+            if (th.joinable()) th.join();
         }
         
         ~heartbeat() {stop();}
         
     private:
-        boost::mutex mutex;
+        heartbeat(const heartbeat&); 
+    
         std::function<bool()> election = nullptr, alive = nullptr;
         boost::thread th;
         int repeat = 1;
