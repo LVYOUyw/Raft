@@ -10,5 +10,5 @@ INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 
 link_libraries(grpc++ protobuf pthread)
 
-add_executable(server main.cpp heartbeat.hpp server.hpp test_proto.grpc.pb.cc test_proto.pb.cc)
+add_executable(server main.cpp heartbeat.hpp server.hpp External.hpp test_proto.grpc.pb.cc test_proto.pb.cc external.grpc.pb.cc external.pb.cc)
 TARGET_LINK_LIBRARIES(server LINK_PUBLIC ${Boost_LIBRARIES})

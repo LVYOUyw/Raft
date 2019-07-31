@@ -6,7 +6,7 @@
 #include <vector>
 #include <boost/thread/thread.hpp>
 #include "server.hpp"
-#include "test_proto.grpc.pb.h"
+#include "External.hpp"
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -16,16 +16,16 @@ using test::Vergil;
 int n;
 std::vector<boost::thread> V;
 
-void Run(int port) 
+void Run(int port)
 {
     Service tmp;
     tmp.Start(port);
 }
 
-int main(int argc, char** argv) 
+int main(int argc, char** argv)
 {
-    scanf("%d",&n);  
-    for (int i=0;i<n;i++) 
+    scanf("%d",&n);
+    for (int i=0;i<n;i++)
     {
         boost::thread th(boost::bind(Run,i+50051));
         V.emplace_back(std::move(th));

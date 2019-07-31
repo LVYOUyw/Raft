@@ -4,6 +4,7 @@
 #include <bits/stdc++.h>
 #include <grpcpp/grpcpp.h>
 #include "test_proto.grpc.pb.h"
+#include "external.grpc.pb.h"
 #include <boost/thread/thread.hpp>
 #include "heartbeat.hpp"
 using grpc::Server;
@@ -14,7 +15,13 @@ using test::AppendEntriesMessage;
 using test::RequestVoteMessage;
 using test::Entry;
 using test::Reply;
+using test::GetV;
 using test::Vergil;
+using external::PutRequest;
+using external::GetRequest;
+using external::GetReply;
+using external::PutReply;
+using external::External;
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
@@ -48,7 +55,6 @@ struct RequestVoteRPC
 {
     int term;
     std::string candidateid;
-
     RequestVoteRPC(int Term = 0, std::string id = "") : term(Term), candidateid(id) {}
 };
 
@@ -74,10 +80,24 @@ class ServiceImpl final : public Vergil::Service
             client = std::forward<Func>(f);
         }
 
+        template <class Func>
+        void initget(Func &&f)
+        {
+            getv = std::forward<Func>(f);
+        }
+
+        Status GetValue(ServerContext* context, const GetV* request,
+                        GetV* reply)     override
+        {
+            std::string ans = getv(request -> key());
+            reply -> set_key(ans);
+            return Status::OK;
+        }
+
         Status LeaderAppend(ServerContext* context, const Entry* request,
                            Reply* reply)     override
         {
-            client(EntryRPC(request -> key(), request -> value(), 0));
+            client(EntryRPC(request -> key(), request -> args(), 0));
             return Status::OK;
         }
 
@@ -113,7 +133,8 @@ class ServiceImpl final : public Vergil::Service
     private:
          std::function<RPCReply(const AppendEntiresRPC &)> append;
          std::function<RPCReply(const RequestVoteRPC &)> vote;
-         std::function<void(EntryRPC &)> client;
+         std::function<void(const EntryRPC &)> client;
+         std::function<std::string(const std::string &)> getv;
 };
 
 class Service
@@ -159,7 +180,7 @@ class Service
             Entry* entry;
             for (int i=nextIndex[id]-1;i<log.size();i++)
             {
-                entry = Req.entries.add_entry();
+                entry = Req.entries().add_entry();
                 entry -> set_term(log[i].term);
                 entry -> set_key(log[i].key);
                 entry -> set_args(log[i].value);
@@ -213,13 +234,6 @@ class Service
             return 1;
         }
 
-        void Leader(EntryRPC &message)
-        {
-            message.term=currentTerm;
-            log.push_back(message);
-            boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
-        }
-
         RPCReply append(const AppendEntiresRPC &message)
         {
             Control.interrupt();
@@ -253,6 +267,19 @@ class Service
             return reply;
         }
 
+        void Leader(const EntryRPC &message)
+        {
+            EntryRPC tmp=message;
+            tmp.term=currentTerm;
+            log.push_back(tmp);
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+        }
+
+        std::string GetV(const std::string & s)
+        {
+            return M[s];
+        }
+
         void LeaderPrepare()
         {
             nextIndex.clear();
@@ -260,13 +287,25 @@ class Service
             int siz=log.size();
             leader = Port;
             for (int i=0;i<4;i++) nextIndex.push(siz);
+            for (int i=0;i<5;i++)
+            {
+                std::shared_ptr<Channel> channel = grpc::CreateChannel("0.0.0.0:" + std::to_string(50051+i),
+                                                   grpc::InsecureChannelCredentials());
+                std::unique_ptr<Vergil::Stub> tmp = Vergil::NewStub(channel);
+                GetRequest Req;
+                GetReply Rep;
+                ClientContext cont;
+                Req.set_key(std::to_string(leader));
+                tmp -> TellLeader(&cont, Req, &Rep);
+            }
         }
 
         void Start(uint16_t port)
         {
             service.initappend(std::bind(&Service::append, this, std::placeholders::_1));
             service.initvote(std::bind(&Service::vote, this, std::placeholders::_1));
-            service.initclient(std::bind(&Service::vote, this,))
+            service.initclient(std::bind(&Service::Leader, this, std::placeholders::_1));
+            service.initgetv(std::bind(&Service::GetV, this, std::placeholders::_1));
             Control.initElection(std::bind(&Service::Election, this));
             Control.initAlive(std::bind(&Service::Alive, this));
             std::string server_address("0.0.0.0:" + std::to_string(port));
@@ -279,7 +318,7 @@ class Service
             runningThread = std::thread([this] { serv -> Wait(); });
             log.push_back((EntryRPC("","",0)));
             Control.start();
-        }0
+        }
 
         void Shutdown()
         {
@@ -299,7 +338,6 @@ class Service
         uint16_t Port,leader;
         heartbeat Control;
         std::atomic<int> voteCnt;
-        std::atomic<int>
         std::vector<EntryRPC> log;
         int commitIndex = 0, lastApplied = 0;
         std::vector<int> nextIndex, matchIndex;

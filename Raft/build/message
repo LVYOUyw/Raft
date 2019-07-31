@@ -1,0 +1,4 @@
+[ 16%] Building CXX object CMakeFiles/server.dir/main.cpp.o
+CMakeFiles/server.dir/build.make:62: recipe for target 'CMakeFiles/server.dir/main.cpp.o' failed
+CMakeFiles/Makefile2:67: recipe for target 'CMakeFiles/server.dir/all' failed
+Makefile:83: recipe for target 'all' failed

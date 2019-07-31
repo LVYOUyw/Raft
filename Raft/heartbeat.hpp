@@ -1,54 +1,58 @@
+#ifndef PPCA_RAFT_HEART
+#define PPCA_RAFT_HEART
+
+
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/chrono.hpp>
-#include <bits/stdc++.h>  
+#include <bits/stdc++.h>
 
 class heartbeat
 {
     public:
-        
+
         heartbeat() = default;
-        
-        template <class Func> 
-        void initElection(Func &&f) 
+
+        template <class Func>
+        void initElection(Func &&f)
         {
             election = std::forward<Func>(f);
         }
-        
-        template <class Func> 
-        void initAlive(Func &&f) 
+
+        template <class Func>
+        void initAlive(Func &&f)
         {
             alive = std::forward<Func>(f);
         }
-        
-        void interrupt() 
+
+        void interrupt()
         {
             th.interrupt();
-        }   
-           
-    
-        void start() 
+        }
+
+
+        void start()
         {
             //boost::unique_lock<boost::mutex> lk(m);
-            th=boost::thread([f=election, g=alive, period=period, s=state, repeat=repeat] 
+            th=boost::thread([f=election, g=alive, period=period, s=state, repeat=repeat]
             {
                 boost::this_thread::disable_interruption di;
                 int state=s;
                 do
                 {
-                    if (state == 1) 
+                    if (state == 1)
                     {
-                        try 
+                        try
                         {
                             boost::this_thread::restore_interruption ri(di);
                             boost::this_thread::sleep_for(boost::chrono::milliseconds(std::rand()%150+150));
-                        } 
-                        catch (boost::thread_interrupted) 
+                        }
+                        catch (boost::thread_interrupted)
                         {
                             state = 1;
                             continue;
                         }
-                        state = 2;      
+                        state = 2;
                     }
                     else if (state == 2)
                     {
@@ -64,7 +68,7 @@ class heartbeat
                         }
                         if (flag) state = 3;
                     }
-                    else if (state == 3) 
+                    else if (state == 3)
                     {
                         try
                         {
@@ -72,14 +76,14 @@ class heartbeat
                             boost::this_thread::restore_interruption ri(di);
                             boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
                         }
-                        catch (...) 
+                        catch (...)
                         {
                             state = 1;
                             continue;
                         }
                     }
                 } while (repeat);
-            });        
+            });
         }
 
         void stop()
@@ -88,15 +92,16 @@ class heartbeat
             th.interrupt();
             if (th.joinable()) th.join();
         }
-        
+
         ~heartbeat() {stop();}
-        
+
     private:
-        heartbeat(const heartbeat&); 
-    
+        heartbeat(const heartbeat&);
+
         std::function<bool()> election = nullptr, alive = nullptr;
         boost::thread th;
         int repeat = 1;
         int state = 1;  // 1 for follower, 2 for candidate, 3 for leader
         int period;
 };
+#endif

@@ -6,6 +6,12 @@ service Vergil
     rpc RequestVote (RequestVoteMessage) returns (Reply) {}
     rpc AppendEntries (AppendEntriesMessage) returns (Reply) {}
     rpc LeaderAppend (Entry) returns (Reply) {}
+    rpc GetValue (GetV) returns (GetV) {}
+}
+
+message GetV
+{
+    string key = 1;
 }
 
 message Entry
