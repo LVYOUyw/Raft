@@ -5,6 +5,14 @@ service Vergil
 {
     rpc RequestVote (RequestVoteMessage) returns (Reply) {}
     rpc AppendEntries (AppendEntriesMessage) returns (Reply) {}
+    rpc LeaderAppend (Entry) returns (Reply) {}
+}
+
+message Entry
+{
+    int32 term = 1;
+    string key = 2;
+    string args = 3;
 }
 
 message RequestVoteMessage
@@ -19,6 +27,10 @@ message AppendEntriesMessage
 {
     int32 term = 1;
     string leaderID = 2;
+    int32 prevLogIndex = 3;
+    int32 prevLogTerm = 4;
+    repeated Entry entries = 5;
+    int32 leaderCommit = 6;
 }
 
 message Reply
@@ -26,4 +38,3 @@ message Reply
     int32 term = 1;
     bool ans = 2;
 }
-
