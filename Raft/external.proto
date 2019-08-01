@@ -25,4 +25,6 @@ service External {
 
   rpc Get (GetRequest) returns (GetReply) {}
 
+  rpc TellLeader (GetRequest) returns (GetReply) {}
+
 }

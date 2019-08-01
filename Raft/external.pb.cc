@@ -154,15 +154,16 @@ const char descriptor_table_protodef_external_2eproto[] =
   "\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t\"\032\n\010PutReply"
   "\022\016\n\006status\030\001 \001(\010\"\031\n\nGetRequest\022\013\n\003key\030\001 "
   "\001(\t\")\n\010GetReply\022\016\n\006status\030\001 \001(\010\022\r\n\005value"
-  "\030\002 \001(\t2p\n\010External\0221\n\003Put\022\024.external.Put"
-  "Request\032\022.external.PutReply\"\000\0221\n\003Get\022\024.e"
-  "xternal.GetRequest\032\022.external.GetReply\"\000"
-  "b\006proto3"
+  "\030\002 \001(\t2\252\001\n\010External\0221\n\003Put\022\024.external.Pu"
+  "tRequest\032\022.external.PutReply\"\000\0221\n\003Get\022\024."
+  "external.GetRequest\032\022.external.GetReply\""
+  "\000\0228\n\nTellLeader\022\024.external.GetRequest\032\022."
+  "external.GetReply\"\000b\006proto3"
   ;
 ::google::protobuf::internal::DescriptorTable descriptor_table_external_2eproto = {
   false, InitDefaults_external_2eproto, 
   descriptor_table_protodef_external_2eproto,
-  "external.proto", &assign_descriptors_table_external_2eproto, 288,
+  "external.proto", &assign_descriptors_table_external_2eproto, 347,
 };
 
 void AddDescriptors_external_2eproto() {

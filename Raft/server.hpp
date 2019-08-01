@@ -6,6 +6,7 @@
 #include "test_proto.grpc.pb.h"
 #include "external.grpc.pb.h"
 #include <boost/thread/thread.hpp>
+#include <boost/chrono.hpp>
 #include "heartbeat.hpp"
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -81,7 +82,7 @@ class ServiceImpl final : public Vergil::Service
         }
 
         template <class Func>
-        void initget(Func &&f)
+        void initgetv(Func &&f)
         {
             getv = std::forward<Func>(f);
         }
@@ -159,7 +160,7 @@ class Service
         void sendAlive(uint16_t tt)
         {
             std::shared_ptr<Channel> channel = grpc::CreateChannel("0.0.0.0:" +
-                                                   std::to_string(50051+tt),
+                                                   std::to_string(tt),
                                                    grpc::InsecureChannelCredentials());
             std::unique_ptr<Vergil::Stub> tmp = Vergil::NewStub(channel);
             AppendEntriesMessage Req;
@@ -174,20 +175,23 @@ class Service
             }
             Req.set_term(currentTerm);
             Req.set_leaderid(std::to_string(Port));
+            //printf("WWW: %d %d\n",id,nextIndex.size());
             Req.set_prevlogindex(nextIndex[id]-1);
             Req.set_prevlogterm(log[nextIndex[id]-1].term);
+            //puts("TTT");
             Req.set_leadercommit(commitIndex);
             Entry* entry;
-            for (int i=nextIndex[id]-1;i<log.size();i++)
+
+            for (int i=nextIndex[id];i<log.size();i++)
             {
-                entry = Req.entries().add_entry();
+                entry =  Req.add_entries();
                 entry -> set_term(log[i].term);
                 entry -> set_key(log[i].key);
                 entry -> set_args(log[i].value);
             }
-            cont.set_deadline(boost::chrono::system_clock::now() + std::chrono::milliseconds(500));
-            auto status = tmp -> AppendEnties(&cont, Req, &Rep);
-            if (status.ok() && Rep.ans) nextIndex[id]=log.size();
+            cont.set_deadline(std::chrono::system_clock::now() + std::chrono::milliseconds(500));
+            auto status = tmp -> AppendEntries(&cont, Req, &Rep);
+            if (status.ok() && Rep.ans()) nextIndex[id]=log.size();
         }
 
         bool Election()
@@ -216,7 +220,7 @@ class Service
             {
                 if (50051+i==Port) continue;
                // boost::function0<void> f = boost::bind(&Service::sendAlive, this, i);
-                boost::thread th(boost::bind(&Service::sendAlive, this, i));
+                boost::thread th(boost::bind(&Service::sendAlive, this, 50051+i));
                 V.emplace_back(std::move(th));
             }
             for (int i=0;i<4;i++)
@@ -236,11 +240,15 @@ class Service
 
         RPCReply append(const AppendEntiresRPC &message)
         {
+
             Control.interrupt();
-            leaderid = message.leaderId;
+            leader = message.leaderid;
+            int prevLogIndex = message.prevLogIndex;
+            int prevLogTerm = message.prevLogTerm;
             if (currentTerm < message.term) currentTerm = message.term;
             RPCReply reply(0,currentTerm);
             if (log.size()<=message.prevLogIndex) return reply;
+            //std::cout << ("HeartBeat Port" + std::to_string(Port)) << " " << prevLogIndex <<"\n";
             if (log[prevLogIndex].term!=prevLogTerm)
             {
                 while (log.size()>prevLogIndex) log.pop_back();
@@ -248,9 +256,10 @@ class Service
             }
             reply.ans=1;
             int siz=message.Entries.size();
+        //    printf("%d\n",siz);
             for (int i=0;i<siz;i++) log.push_back(message.Entries[i]);
             if (message.leaderCommit>commitIndex)
-                commitIndex=min(leaderCommit,log.size()-1);
+                commitIndex=std::min(message.leaderCommit,(int)log.size()-1);
             while (commitIndex>lastApplied)
             {
                 lastApplied++;
@@ -285,19 +294,19 @@ class Service
             nextIndex.clear();
             matchIndex.clear();
             int siz=log.size();
-            leader = Port;
-            for (int i=0;i<4;i++) nextIndex.push(siz);
-            for (int i=0;i<5;i++)
+            leader = std::to_string(Port);
+            for (int i=0;i<4;i++) nextIndex.push_back(siz);
+        /*    for (int i=0;i<5;i++)
             {
                 std::shared_ptr<Channel> channel = grpc::CreateChannel("0.0.0.0:" + std::to_string(50051+i),
                                                    grpc::InsecureChannelCredentials());
-                std::unique_ptr<Vergil::Stub> tmp = Vergil::NewStub(channel);
+                std::unique_ptr<External::Stub> tmp = External::NewStub(channel);
                 GetRequest Req;
                 GetReply Rep;
                 ClientContext cont;
-                Req.set_key(std::to_string(leader));
+                Req.set_key(leader);
                 tmp -> TellLeader(&cont, Req, &Rep);
-            }
+            }*/
         }
 
         void Start(uint16_t port)
@@ -335,7 +344,8 @@ class Service
         std::thread runningThread;
         int currentTerm = 0;
         std::string votedFor = "";
-        uint16_t Port,leader;
+        uint16_t Port;
+        std::string leader;
         heartbeat Control;
         std::atomic<int> voteCnt;
         std::vector<EntryRPC> log;

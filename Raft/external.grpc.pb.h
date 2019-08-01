@@ -51,6 +51,13 @@ class External final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::external::GetReply>> PrepareAsyncGet(::grpc::ClientContext* context, const ::external::GetRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::external::GetReply>>(PrepareAsyncGetRaw(context, request, cq));
     }
+    virtual ::grpc::Status TellLeader(::grpc::ClientContext* context, const ::external::GetRequest& request, ::external::GetReply* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::external::GetReply>> AsyncTellLeader(::grpc::ClientContext* context, const ::external::GetRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::external::GetReply>>(AsyncTellLeaderRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::external::GetReply>> PrepareAsyncTellLeader(::grpc::ClientContext* context, const ::external::GetRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::external::GetReply>>(PrepareAsyncTellLeaderRaw(context, request, cq));
+    }
     class experimental_async_interface {
      public:
       virtual ~experimental_async_interface() {}
@@ -58,6 +65,8 @@ class External final {
       virtual void Put(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::external::PutReply* response, std::function<void(::grpc::Status)>) = 0;
       virtual void Get(::grpc::ClientContext* context, const ::external::GetRequest* request, ::external::GetReply* response, std::function<void(::grpc::Status)>) = 0;
       virtual void Get(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::external::GetReply* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void TellLeader(::grpc::ClientContext* context, const ::external::GetRequest* request, ::external::GetReply* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void TellLeader(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::external::GetReply* response, std::function<void(::grpc::Status)>) = 0;
     };
     virtual class experimental_async_interface* experimental_async() { return nullptr; }
   private:
@@ -65,6 +74,8 @@ class External final {
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::external::PutReply>* PrepareAsyncPutRaw(::grpc::ClientContext* context, const ::external::PutRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::external::GetReply>* AsyncGetRaw(::grpc::ClientContext* context, const ::external::GetRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::external::GetReply>* PrepareAsyncGetRaw(::grpc::ClientContext* context, const ::external::GetRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::external::GetReply>* AsyncTellLeaderRaw(::grpc::ClientContext* context, const ::external::GetRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::external::GetReply>* PrepareAsyncTellLeaderRaw(::grpc::ClientContext* context, const ::external::GetRequest& request, ::grpc::CompletionQueue* cq) = 0;
   };
   class Stub final : public StubInterface {
    public:
@@ -83,6 +94,13 @@ class External final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::external::GetReply>> PrepareAsyncGet(::grpc::ClientContext* context, const ::external::GetRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::external::GetReply>>(PrepareAsyncGetRaw(context, request, cq));
     }
+    ::grpc::Status TellLeader(::grpc::ClientContext* context, const ::external::GetRequest& request, ::external::GetReply* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::external::GetReply>> AsyncTellLeader(::grpc::ClientContext* context, const ::external::GetRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::external::GetReply>>(AsyncTellLeaderRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::external::GetReply>> PrepareAsyncTellLeader(::grpc::ClientContext* context, const ::external::GetRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::external::GetReply>>(PrepareAsyncTellLeaderRaw(context, request, cq));
+    }
     class experimental_async final :
       public StubInterface::experimental_async_interface {
      public:
@@ -90,6 +108,8 @@ class External final {
       void Put(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::external::PutReply* response, std::function<void(::grpc::Status)>) override;
       void Get(::grpc::ClientContext* context, const ::external::GetRequest* request, ::external::GetReply* response, std::function<void(::grpc::Status)>) override;
       void Get(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::external::GetReply* response, std::function<void(::grpc::Status)>) override;
+      void TellLeader(::grpc::ClientContext* context, const ::external::GetRequest* request, ::external::GetReply* response, std::function<void(::grpc::Status)>) override;
+      void TellLeader(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::external::GetReply* response, std::function<void(::grpc::Status)>) override;
      private:
       friend class Stub;
       explicit experimental_async(Stub* stub): stub_(stub) { }
@@ -105,8 +125,11 @@ class External final {
     ::grpc::ClientAsyncResponseReader< ::external::PutReply>* PrepareAsyncPutRaw(::grpc::ClientContext* context, const ::external::PutRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::external::GetReply>* AsyncGetRaw(::grpc::ClientContext* context, const ::external::GetRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::external::GetReply>* PrepareAsyncGetRaw(::grpc::ClientContext* context, const ::external::GetRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::external::GetReply>* AsyncTellLeaderRaw(::grpc::ClientContext* context, const ::external::GetRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::external::GetReply>* PrepareAsyncTellLeaderRaw(::grpc::ClientContext* context, const ::external::GetRequest& request, ::grpc::CompletionQueue* cq) override;
     const ::grpc::internal::RpcMethod rpcmethod_Put_;
     const ::grpc::internal::RpcMethod rpcmethod_Get_;
+    const ::grpc::internal::RpcMethod rpcmethod_TellLeader_;
   };
   static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
 
@@ -116,6 +139,7 @@ class External final {
     virtual ~Service();
     virtual ::grpc::Status Put(::grpc::ServerContext* context, const ::external::PutRequest* request, ::external::PutReply* response);
     virtual ::grpc::Status Get(::grpc::ServerContext* context, const ::external::GetRequest* request, ::external::GetReply* response);
+    virtual ::grpc::Status TellLeader(::grpc::ServerContext* context, const ::external::GetRequest* request, ::external::GetReply* response);
   };
   template <class BaseClass>
   class WithAsyncMethod_Put : public BaseClass {
@@ -157,7 +181,27 @@ class External final {
       ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_Put<WithAsyncMethod_Get<Service > > AsyncService;
+  template <class BaseClass>
+  class WithAsyncMethod_TellLeader : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithAsyncMethod_TellLeader() {
+      ::grpc::Service::MarkMethodAsync(2);
+    }
+    ~WithAsyncMethod_TellLeader() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status TellLeader(::grpc::ServerContext* context, const ::external::GetRequest* request, ::external::GetReply* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestTellLeader(::grpc::ServerContext* context, ::external::GetRequest* request, ::grpc::ServerAsyncResponseWriter< ::external::GetReply>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  typedef WithAsyncMethod_Put<WithAsyncMethod_Get<WithAsyncMethod_TellLeader<Service > > > AsyncService;
   template <class BaseClass>
   class ExperimentalWithCallbackMethod_Put : public BaseClass {
    private:
@@ -208,7 +252,32 @@ class External final {
     }
     virtual void Get(::grpc::ServerContext* context, const ::external::GetRequest* request, ::external::GetReply* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
-  typedef ExperimentalWithCallbackMethod_Put<ExperimentalWithCallbackMethod_Get<Service > > ExperimentalCallbackService;
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_TellLeader : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithCallbackMethod_TellLeader() {
+      ::grpc::Service::experimental().MarkMethodCallback(2,
+        new ::grpc::internal::CallbackUnaryHandler< ::external::GetRequest, ::external::GetReply>(
+          [this](::grpc::ServerContext* context,
+                 const ::external::GetRequest* request,
+                 ::external::GetReply* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   return this->TellLeader(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithCallbackMethod_TellLeader() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status TellLeader(::grpc::ServerContext* context, const ::external::GetRequest* request, ::external::GetReply* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void TellLeader(::grpc::ServerContext* context, const ::external::GetRequest* request, ::external::GetReply* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  typedef ExperimentalWithCallbackMethod_Put<ExperimentalWithCallbackMethod_Get<ExperimentalWithCallbackMethod_TellLeader<Service > > > ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_Put : public BaseClass {
    private:
@@ -239,6 +308,23 @@ class External final {
     }
     // disable synchronous version of this method
     ::grpc::Status Get(::grpc::ServerContext* context, const ::external::GetRequest* request, ::external::GetReply* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithGenericMethod_TellLeader : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithGenericMethod_TellLeader() {
+      ::grpc::Service::MarkMethodGeneric(2);
+    }
+    ~WithGenericMethod_TellLeader() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status TellLeader(::grpc::ServerContext* context, const ::external::GetRequest* request, ::external::GetReply* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -281,6 +367,26 @@ class External final {
     }
     void RequestGet(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
       ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_TellLeader : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithRawMethod_TellLeader() {
+      ::grpc::Service::MarkMethodRaw(2);
+    }
+    ~WithRawMethod_TellLeader() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status TellLeader(::grpc::ServerContext* context, const ::external::GetRequest* request, ::external::GetReply* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestTellLeader(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -334,6 +440,31 @@ class External final {
     virtual void Get(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_TellLeader : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithRawCallbackMethod_TellLeader() {
+      ::grpc::Service::experimental().MarkMethodRawCallback(2,
+        new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          [this](::grpc::ServerContext* context,
+                 const ::grpc::ByteBuffer* request,
+                 ::grpc::ByteBuffer* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   this->TellLeader(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithRawCallbackMethod_TellLeader() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status TellLeader(::grpc::ServerContext* context, const ::external::GetRequest* request, ::external::GetReply* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void TellLeader(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
   class WithStreamedUnaryMethod_Put : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service *service) {}
@@ -373,9 +504,29 @@ class External final {
     // replace default version of method with streamed unary
     virtual ::grpc::Status StreamedGet(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::external::GetRequest,::external::GetReply>* server_unary_streamer) = 0;
   };
-  typedef WithStreamedUnaryMethod_Put<WithStreamedUnaryMethod_Get<Service > > StreamedUnaryService;
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_TellLeader : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithStreamedUnaryMethod_TellLeader() {
+      ::grpc::Service::MarkMethodStreamed(2,
+        new ::grpc::internal::StreamedUnaryHandler< ::external::GetRequest, ::external::GetReply>(std::bind(&WithStreamedUnaryMethod_TellLeader<BaseClass>::StreamedTellLeader, this, std::placeholders::_1, std::placeholders::_2)));
+    }
+    ~WithStreamedUnaryMethod_TellLeader() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status TellLeader(::grpc::ServerContext* context, const ::external::GetRequest* request, ::external::GetReply* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedTellLeader(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::external::GetRequest,::external::GetReply>* server_unary_streamer) = 0;
+  };
+  typedef WithStreamedUnaryMethod_Put<WithStreamedUnaryMethod_Get<WithStreamedUnaryMethod_TellLeader<Service > > > StreamedUnaryService;
   typedef Service SplitStreamedService;
-  typedef WithStreamedUnaryMethod_Put<WithStreamedUnaryMethod_Get<Service > > StreamedService;
+  typedef WithStreamedUnaryMethod_Put<WithStreamedUnaryMethod_Get<WithStreamedUnaryMethod_TellLeader<Service > > > StreamedService;
 };
 
 }  // namespace external

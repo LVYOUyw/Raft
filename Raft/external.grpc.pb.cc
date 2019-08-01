@@ -21,6 +21,7 @@ namespace external {
 static const char* External_method_names[] = {
   "/external.External/Put",
   "/external.External/Get",
+  "/external.External/TellLeader",
 };
 
 std::unique_ptr< External::Stub> External::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
@@ -32,6 +33,7 @@ std::unique_ptr< External::Stub> External::NewStub(const std::shared_ptr< ::grpc
 External::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
   : channel_(channel), rpcmethod_Put_(External_method_names[0], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   , rpcmethod_Get_(External_method_names[1], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_TellLeader_(External_method_names[2], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
 ::grpc::Status External::Stub::Put(::grpc::ClientContext* context, const ::external::PutRequest& request, ::external::PutReply* response) {
@@ -74,6 +76,26 @@ void External::Stub::experimental_async::Get(::grpc::ClientContext* context, con
   return ::grpc::internal::ClientAsyncResponseReaderFactory< ::external::GetReply>::Create(channel_.get(), cq, rpcmethod_Get_, context, request, false);
 }
 
+::grpc::Status External::Stub::TellLeader(::grpc::ClientContext* context, const ::external::GetRequest& request, ::external::GetReply* response) {
+  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_TellLeader_, context, request, response);
+}
+
+void External::Stub::experimental_async::TellLeader(::grpc::ClientContext* context, const ::external::GetRequest* request, ::external::GetReply* response, std::function<void(::grpc::Status)> f) {
+  return ::grpc::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_TellLeader_, context, request, response, std::move(f));
+}
+
+void External::Stub::experimental_async::TellLeader(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::external::GetReply* response, std::function<void(::grpc::Status)> f) {
+  return ::grpc::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_TellLeader_, context, request, response, std::move(f));
+}
+
+::grpc::ClientAsyncResponseReader< ::external::GetReply>* External::Stub::AsyncTellLeaderRaw(::grpc::ClientContext* context, const ::external::GetRequest& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::external::GetReply>::Create(channel_.get(), cq, rpcmethod_TellLeader_, context, request, true);
+}
+
+::grpc::ClientAsyncResponseReader< ::external::GetReply>* External::Stub::PrepareAsyncTellLeaderRaw(::grpc::ClientContext* context, const ::external::GetRequest& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::external::GetReply>::Create(channel_.get(), cq, rpcmethod_TellLeader_, context, request, false);
+}
+
 External::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       External_method_names[0],
@@ -85,6 +107,11 @@ External::Service::Service() {
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< External::Service, ::external::GetRequest, ::external::GetReply>(
           std::mem_fn(&External::Service::Get), this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      External_method_names[2],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< External::Service, ::external::GetRequest, ::external::GetReply>(
+          std::mem_fn(&External::Service::TellLeader), this)));
 }
 
 External::Service::~Service() {
@@ -98,6 +125,13 @@ External::Service::~Service() {
 }
 
 ::grpc::Status External::Service::Get(::grpc::ServerContext* context, const ::external::GetRequest* request, ::external::GetReply* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status External::Service::TellLeader(::grpc::ServerContext* context, const ::external::GetRequest* request, ::external::GetReply* response) {
   (void) context;
   (void) request;
   (void) response;

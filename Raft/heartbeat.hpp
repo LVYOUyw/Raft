@@ -49,6 +49,7 @@ class heartbeat
                         }
                         catch (boost::thread_interrupted)
                         {
+                        //    puts("LLLL");
                             state = 1;
                             continue;
                         }

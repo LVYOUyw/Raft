@@ -13,13 +13,16 @@ using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
 using test::Vergil;
+using external::External;
 int n;
 std::vector<boost::thread> V;
 
 void Run(int port)
 {
-    Service tmp;
-    tmp.Start(port);
+    Service tmp1;
+//    ExternalService tmp2;
+    tmp1.Start(port);
+//    tmp2.Start(port);
 }
 
 int main(int argc, char** argv)
@@ -30,6 +33,7 @@ int main(int argc, char** argv)
         boost::thread th(boost::bind(Run,i+50051));
         V.emplace_back(std::move(th));
     }
-    for (int i=0;i<n;i++) V[i].join();
+    for (int i=0;i<n;i++)
+        if (V[i].joinable()) V[i].join();
     return 0;
 }

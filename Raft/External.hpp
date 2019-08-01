@@ -49,7 +49,7 @@ class ExternalImpl final : public External::Service
         template <class Func>
         void inittell(Func &&f)
         {
-            tellt = std::forward<Func>(f);
+            Tellt = std::forward<Func>(f);
         }
 
         Status Put(ServerContext* context, const PutRequest* request,
@@ -62,11 +62,13 @@ class ExternalImpl final : public External::Service
         Status Get(ServerContext* context, const GetRequest* request,
                    GetReply* reply)     override
         {
-            Gett(request -> key());
+            std::string ss = Gett(request -> key());
+            reply -> set_value(ss);
+            reply -> set_status(1);
             return Status::OK;
         }
 
-        Status TellLeader(ServerContext* context, const GutRequest* request,
+        Status TellLeader(ServerContext* context, const GetRequest* request,
                           GetReply* reply)     override
         {
             Tellt(request -> key());
@@ -80,15 +82,15 @@ class ExternalImpl final : public External::Service
         std::function<void(const std::string &)> Tellt;
 };
 
-class External
+class ExternalService
 {
     public:
 
         void Start(uint16_t port)
         {
-            service.initput(std::bind(&External::Put, this, std::placeholders::_1));
-            service.initget(std::bind(&External::Get, this, std::placeholders::_1));
-            service.inittell(std::bind(&External::Tell, this, std::placeholders::_1));
+            service.initput(std::bind(&ExternalService::Put, this, std::placeholders::_1));
+            service.initget(std::bind(&ExternalService::Get, this, std::placeholders::_1));
+            service.inittell(std::bind(&ExternalService::Tell, this, std::placeholders::_1));
             std::string server_address("0.0.0.0:" + std::to_string(port));
             ServerBuilder builder;
             builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
@@ -96,6 +98,8 @@ class External
             serv=builder.BuildAndStart();
             Port = port;
             runningThread = std::thread([this] { serv -> Wait(); });
+            std::cout << "ExternalServer is listenning in 0.0.0.0:" + std::to_string(port) << "\n";
+            runningThread.join();
         }
 
         void Put(const PutRPC &message)
@@ -107,7 +111,7 @@ class External
             Reply Rep;
             ClientContext cont;
             Req.set_key(message.key);
-            Req.set_value(message.value);
+            Req.set_args(message.value);
             tmp -> LeaderAppend(&cont, Req, &Rep);
         }
 
@@ -121,8 +125,7 @@ class External
             ClientContext cont;
             Req.set_key(message);
             tmp -> GetValue(&cont, Req, &Rep);
-            reply.set_status(1);
-            reply.set_value(Rep.key);
+            return Rep.key();
         }
 
         void Tell(const std::string &message)
