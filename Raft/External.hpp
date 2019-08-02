@@ -130,14 +130,17 @@ class ExternalService
 
         void Tell(const std::string &message)
         {
+            std::cout<<std::to_string(Port) + ": Receive leader: " + message << "\n";
             leader = message;
         }
+    public:
+        std::string leader;
 
     private:
         ExternalImpl service;
         std::unique_ptr<Server> serv;
         std::thread runningThread;
         uint16_t Port;
-        std::string leader;
+        //std::string leader;
 };
 #endif

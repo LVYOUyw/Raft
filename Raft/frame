@@ -1,0 +1,25 @@
+code:
+    main.cpp:
+            Start
+
+    server.hpp:
+            Election And AppendEntries
+
+    heartbeat.hpp:
+            control server status
+
+    External.hpp:
+            Put And Get
+            communicate with server
+
+Threads:
+
+    main   -> ServerService  -> Service
+                             -> HeartBeat
+
+
+           -> ExternalService
+
+Shared data:
+
+    

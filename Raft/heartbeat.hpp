@@ -49,7 +49,6 @@ class heartbeat
                         }
                         catch (boost::thread_interrupted)
                         {
-                        //    puts("LLLL");
                             state = 1;
                             continue;
                         }
@@ -80,7 +79,7 @@ class heartbeat
                         catch (...)
                         {
                             state = 1;
-                            continue;
+                            break;
                         }
                     }
                 } while (repeat);
@@ -89,7 +88,6 @@ class heartbeat
 
         void stop()
         {
-            repeat = 0;
             th.interrupt();
             if (th.joinable()) th.join();
         }

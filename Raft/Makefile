@@ -16,7 +16,6 @@
 
 HOST_SYSTEM = $(shell uname | cut -f 1 -d_)
 SYSTEM ?= $(HOST_SYSTEM)
-Boost_Root = /usr/include
 CXX = g++
 CPPFLAGS += `pkg-config --cflags protobuf grpc`
 CXXFLAGS += -std=c++11
@@ -37,9 +36,9 @@ PROTOS_PATH = .
 
 vpath %.proto $(PROTOS_PATH)
 
-all: system-check  server
+all: system-check  client
 
-server: test_proto.pb.o test_proto.grpc.pb.o main.o 
+client: external.pb.o external.grpc.pb.o client.o 
 	$(CXX) $^ $(LDFLAGS) -o $@
 
  .PRECIOUS: %.grpc.pb.cc
@@ -50,7 +49,7 @@ server: test_proto.pb.o test_proto.grpc.pb.o main.o
 	$(PROTOC) -I $(PROTOS_PATH) --cpp_out=. $<
 
 clean:
-	rm -f *.o *.pb.cc *.pb.h  server
+	rm -f *.o *.pb.cc *.pb.h  client
 
 
 # The following is to test your system and ensure a smoother experience.

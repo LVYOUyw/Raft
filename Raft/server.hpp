@@ -209,6 +209,7 @@ class Service
             }
             for (int i=0;i<4;i++)
                 if (V[i].joinable()) V[i].join();
+            std::cout<<"voteCnt:"<<" "<<voteCnt<<"\n";
             if (voteCnt > 5 / 2) {std::cout<<"leader:"<<Port<<"\n";LeaderPrepare();return 1;}
             return 0;
         }
@@ -264,6 +265,7 @@ class Service
             {
                 lastApplied++;
                 M[log[lastApplied].key] = log[lastApplied].value;
+            //    std::cout<<std::to_string(Port)<<": update!"<<"\n";
             }
             return reply;
         }
@@ -296,9 +298,9 @@ class Service
             int siz=log.size();
             leader = std::to_string(Port);
             for (int i=0;i<4;i++) nextIndex.push_back(siz);
-        /*    for (int i=0;i<5;i++)
+            /*for (int i=0;i<5;i++)
             {
-                std::shared_ptr<Channel> channel = grpc::CreateChannel("0.0.0.0:" + std::to_string(50051+i),
+                std::shared_ptr<Channel> channel = grpc::CreateChannel("0.0.0.0:" + std::to_string(50051+i+5),
                                                    grpc::InsecureChannelCredentials());
                 std::unique_ptr<External::Stub> tmp = External::NewStub(channel);
                 GetRequest Req;
@@ -327,6 +329,12 @@ class Service
             runningThread = std::thread([this] { serv -> Wait(); });
             log.push_back((EntryRPC("","",0)));
             Control.start();
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(10000));
+            if (leader==std::to_string(Port))
+            {
+                puts("Shutdown");
+                Shutdown();
+            }
         }
 
         void Shutdown()
@@ -337,6 +345,8 @@ class Service
             runningThread.join();
         }
 
+    public:
+        uint16_t Port;
 
     private:
         ServiceImpl service;
@@ -344,7 +354,7 @@ class Service
         std::thread runningThread;
         int currentTerm = 0;
         std::string votedFor = "";
-        uint16_t Port;
+        //uint16_t Port;
         std::string leader;
         heartbeat Control;
         std::atomic<int> voteCnt;
