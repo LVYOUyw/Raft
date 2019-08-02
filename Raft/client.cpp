@@ -29,26 +29,61 @@ class Client
             stub_ -> Put(&cont, Req, &Rep);
         }
 
-        void Get(const std::string& key)
+        std::string Get(const std::string& key)
         {
             GetRequest Req;
             GetReply Rep;
             ClientContext cont;
             Req.set_key(key);
             stub_ -> Get(&cont, Req, &Rep);
-            std::cout<<key<<" "<<Rep.value()<<"\n";
+            //std::cout<<key<<" "<<Rep.value()<<"\n";
+            return Rep.value();
         }
 
     private:
         std::unique_ptr<External::Stub> stub_;
 };
 
+void test(std::size_t n) {
+    Client c(grpc::CreateChannel("0.0.0.0:"+std::to_string(n+50056), grpc::InsecureChannelCredentials()));
+
+    std::mt19937 eng(std::random_device{}());
+    std::uniform_int_distribution<std::size_t> sleepTimeDist(0, 100);
+    auto randSleep = [&eng, &sleepTimeDist] {
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepTimeDist(eng)));
+    };
+
+    for (int i = 0; i < 30; ++i) {
+        auto str = std::to_string(i);
+        c.Put(str, str);
+        randSleep();
+        std::cout << "Put " << i << std::endl;
+    }
+
+    for (int i = 0; i < 30; ++i) {
+        auto str = std::to_string(i);
+        auto res = c.Get(str);
+        if (res != str)
+        {
+            std::cout<<"****"<<res<<" "<<str<<"******"<<"\n";
+            return;
+        }
+        std::cout << "Get: " << i << std::endl;
+        randSleep();
+    }
+}
+
 int main()
 {
-    Client test(grpc::CreateChannel("0.0.0.0:50057", grpc::InsecureChannelCredentials()));
-    test.Put("Vergil", "123");
-    test.Put("Garbreil","456");
-    test.Put("123","344");
-    test.Get("Vergil");
+    const std::size_t NClient = 3;
+    std::vector<std::thread> ts;
+    ts.reserve(NClient);
+    for (std::size_t i = 0; i < NClient; ++i) {
+        ts.emplace_back(std::bind(test, i));
+    }
+    for (auto & t : ts)
+        t.join();
+
+
     return 0;
 }

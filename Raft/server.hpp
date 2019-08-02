@@ -258,6 +258,7 @@ class Service
             reply.ans=1;
             int siz=message.Entries.size();
         //    printf("%d\n",siz);
+            puts("W");
             for (int i=0;i<siz;i++) log.push_back(message.Entries[i]);
             if (message.leaderCommit>commitIndex)
                 commitIndex=std::min(message.leaderCommit,(int)log.size()-1);
@@ -265,7 +266,7 @@ class Service
             {
                 lastApplied++;
                 M[log[lastApplied].key] = log[lastApplied].value;
-            //    std::cout<<std::to_string(Port)<<": update!"<<"\n";
+                std::cout<<std::to_string(Port)<<": update!"<<" "<<lastApplied<<"\n";
             }
             return reply;
         }
@@ -288,6 +289,7 @@ class Service
 
         std::string GetV(const std::string & s)
         {
+            //boost::this_thread::sleep_for(boost::chrono::milliseconds(5000));
             return M[s];
         }
 
@@ -298,7 +300,7 @@ class Service
             int siz=log.size();
             leader = std::to_string(Port);
             for (int i=0;i<4;i++) nextIndex.push_back(siz);
-            /*for (int i=0;i<5;i++)
+            for (int i=0;i<5;i++)
             {
                 std::shared_ptr<Channel> channel = grpc::CreateChannel("0.0.0.0:" + std::to_string(50051+i+5),
                                                    grpc::InsecureChannelCredentials());
@@ -308,7 +310,7 @@ class Service
                 ClientContext cont;
                 Req.set_key(leader);
                 tmp -> TellLeader(&cont, Req, &Rep);
-            }*/
+            }
         }
 
         void Start(uint16_t port)
@@ -329,12 +331,12 @@ class Service
             runningThread = std::thread([this] { serv -> Wait(); });
             log.push_back((EntryRPC("","",0)));
             Control.start();
-            boost::this_thread::sleep_for(boost::chrono::milliseconds(10000));
-            if (leader==std::to_string(Port))
+            /*     boost::this_thread::sleep_for(boost::chrono::milliseconds(10000));
+           if (leader==std::to_string(Port))
             {
                 puts("Shutdown");
                 Shutdown();
-            }
+            }*/
         }
 
         void Shutdown()
