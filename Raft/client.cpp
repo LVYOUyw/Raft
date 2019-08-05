@@ -27,6 +27,7 @@ class Client
             Req.set_key(key);
             Req.set_value(value);
             stub_ -> Put(&cont, Req, &Rep);
+            std::cout<<Rep.status()<<"\n";
         }
 
         std::string Get(const std::string& key)
@@ -59,6 +60,7 @@ void test(std::size_t n) {
         randSleep();
         std::cout << "Put " << i << std::endl;
     }
+
 
     for (int i = 0; i < 30; ++i) {
         auto str = std::to_string(i);

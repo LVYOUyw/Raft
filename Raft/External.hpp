@@ -55,7 +55,7 @@ class ExternalImpl final : public External::Service
         Status Put(ServerContext* context, const PutRequest* request,
                    PutReply* reply)     override
         {
-            Putt(PutRPC(request -> key(), request -> value()));
+            reply -> set_status(Putt(PutRPC(request -> key(), request -> value())));
             return Status::OK;
         }
 
@@ -71,13 +71,14 @@ class ExternalImpl final : public External::Service
         Status TellLeader(ServerContext* context, const GetRequest* request,
                           GetReply* reply)     override
         {
+
             Tellt(request -> key());
             return Status::OK;
         }
 
 
     private:
-        std::function<void(const PutRPC &)> Putt;
+        std::function<bool(const PutRPC &)> Putt;
         std::function<std::string(const std::string &)> Gett;
         std::function<void(const std::string &)> Tellt;
 };
@@ -102,7 +103,7 @@ class ExternalService
             runningThread.join();
         }
 
-        void Put(const PutRPC &message)
+        bool Put(const PutRPC &message)
         {
             std::shared_ptr<Channel> channel = grpc::CreateChannel("0.0.0.0:" + leader,
             grpc::InsecureChannelCredentials());
@@ -112,7 +113,8 @@ class ExternalService
             ClientContext cont;
             Req.set_key(message.key);
             Req.set_args(message.value);
-            tmp -> LeaderAppend(&cont, Req, &Rep);
+            auto status = tmp -> LeaderAppend(&cont, Req, &Rep);
+            return status.ok()?1:0;
         }
 
         std::string Get(const std::string &message)

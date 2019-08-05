@@ -142,6 +142,11 @@ class Service
 {
     public:
 
+        Service()
+        {
+            currentTerm = 0;
+        }
+
         void sendElection(uint16_t tt)
         {
             std::shared_ptr<Channel> channel = grpc::CreateChannel("0.0.0.0:" +
@@ -153,8 +158,14 @@ class Service
             Req.set_term(currentTerm);
             Req.set_candidateid(std::to_string(Port));
             ClientContext cont;
+            cont.set_deadline(std::chrono::system_clock::now() + std::chrono::milliseconds(300));
             tmp -> RequestVote(&cont, Req, &Rep);
             if (Rep.ans()) voteCnt++;
+            if (Rep.term() > currentTerm)
+            {
+                voteCnt = -100;
+                currentTerm = Rep.term();
+            }
         }
 
         void sendAlive(uint16_t tt)
@@ -166,6 +177,7 @@ class Service
             AppendEntriesMessage Req;
             Reply Rep;
             ClientContext cont;
+            cont.set_deadline(std::chrono::system_clock::now() + std::chrono::milliseconds(500));
             int id=0;
             for (int i=0;i<5;i++)
             {
@@ -175,10 +187,8 @@ class Service
             }
             Req.set_term(currentTerm);
             Req.set_leaderid(std::to_string(Port));
-            //printf("WWW: %d %d\n",id,nextIndex.size());
             Req.set_prevlogindex(nextIndex[id]-1);
             Req.set_prevlogterm(log[nextIndex[id]-1].term);
-            //puts("TTT");
             Req.set_leadercommit(commitIndex);
             Entry* entry;
 
@@ -190,14 +200,24 @@ class Service
                 entry -> set_args(log[i].value);
             }
             cont.set_deadline(std::chrono::system_clock::now() + std::chrono::milliseconds(500));
+        //    printf("send heartbeat to %d\n",id);
             auto status = tmp -> AppendEntries(&cont, Req, &Rep);
-            if (status.ok() && Rep.ans()) nextIndex[id]=log.size();
+            if (Rep.term() > currentTerm)
+            {
+                puts("Leader fail");
+                Control.ToFollower();
+                currentTerm = Rep.term();
+                return;
+            }
+            //if (!Rep.ans()) printf("--%d\n--",nextIndex[id]);
+            nextIndex[id] = Rep.ans() ? log.size() : nextIndex[id] - 1;
         }
 
         bool Election()
         {
             currentTerm++;
             voteCnt = 1;
+            std::cout<<"Candidate "<<currentTerm<<" "<<voteCnt<<"\n";
             votedFor = std::to_string(Port);
             std::vector<boost::thread> V;
             for (int i=0;i<5;i++)
@@ -210,7 +230,8 @@ class Service
             for (int i=0;i<4;i++)
                 if (V[i].joinable()) V[i].join();
             std::cout<<"voteCnt:"<<" "<<voteCnt<<"\n";
-            if (voteCnt > 5 / 2) {std::cout<<"leader:"<<Port<<"\n";LeaderPrepare();return 1;}
+            if (voteCnt > 5 / 2) {std::cout<<"leader:"<<Port<<" "<<currentTerm<<"\n";LeaderPrepare();return 1;}
+            else votedFor = "";
             return 0;
         }
 
@@ -241,13 +262,15 @@ class Service
 
         RPCReply append(const AppendEntiresRPC &message)
         {
-
+            Control.ToFollower();
             Control.interrupt();
+            votedFor = "";
             leader = message.leaderid;
             int prevLogIndex = message.prevLogIndex;
             int prevLogTerm = message.prevLogTerm;
             if (currentTerm < message.term) currentTerm = message.term;
             RPCReply reply(0,currentTerm);
+        //    std::cout << ("HeartBeat Port: " + std::to_string(Port)) << " " << prevLogIndex << " " <<log.size() << "\n";
             if (log.size()<=message.prevLogIndex) return reply;
             //std::cout << ("HeartBeat Port" + std::to_string(Port)) << " " << prevLogIndex <<"\n";
             if (log[prevLogIndex].term!=prevLogTerm)
@@ -258,15 +281,16 @@ class Service
             reply.ans=1;
             int siz=message.Entries.size();
         //    printf("%d\n",siz);
-            puts("W");
+            //puts("W");
             for (int i=0;i<siz;i++) log.push_back(message.Entries[i]);
             if (message.leaderCommit>commitIndex)
                 commitIndex=std::min(message.leaderCommit,(int)log.size()-1);
+        //    std::cout<<Port<<" "<<commitIndex<<" "<<lastApplied<<"\n";
             while (commitIndex>lastApplied)
             {
                 lastApplied++;
                 M[log[lastApplied].key] = log[lastApplied].value;
-                std::cout<<std::to_string(Port)<<": update!"<<" "<<lastApplied<<"\n";
+                //std::cout<<std::to_string(Port)<<" "<<lastApplied<<"\n";
             }
             return reply;
         }
@@ -274,8 +298,15 @@ class Service
         RPCReply vote(const RequestVoteRPC &message)
         {
             RPCReply reply(1,currentTerm);
-            if (currentTerm > message.term) reply.ans = 0;
-            if (votedFor == "") votedFor = message.candidateid;
+            if (votedFor == "") votedFor = message.candidateid;//else reply.ans = 0;
+            if (currentTerm > message.term)
+            {
+                reply.ans = 0;
+                if (votedFor == message.candidateid) votedFor = "";
+            }
+            if (currentTerm < message.term) currentTerm = message.term;
+            std::cout << Port << " vote for " << votedFor << " in " << currentTerm << " " <<message.term<<"\n";
+
             return reply;
         }
 
@@ -284,6 +315,7 @@ class Service
             EntryRPC tmp=message;
             tmp.term=currentTerm;
             log.push_back(tmp);
+        //    printf("leader: %d\n",log.size());
             boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
         }
 
@@ -295,11 +327,13 @@ class Service
 
         void LeaderPrepare()
         {
+            votedFor = "";
             nextIndex.clear();
             matchIndex.clear();
             int siz=log.size();
             leader = std::to_string(Port);
             for (int i=0;i<4;i++) nextIndex.push_back(siz);
+            Alive();
             for (int i=0;i<5;i++)
             {
                 std::shared_ptr<Channel> channel = grpc::CreateChannel("0.0.0.0:" + std::to_string(50051+i+5),
@@ -308,6 +342,7 @@ class Service
                 GetRequest Req;
                 GetReply Rep;
                 ClientContext cont;
+                cont.set_deadline(std::chrono::system_clock::now() + std::chrono::milliseconds(500));
                 Req.set_key(leader);
                 tmp -> TellLeader(&cont, Req, &Rep);
             }
@@ -322,7 +357,7 @@ class Service
             Control.initElection(std::bind(&Service::Election, this));
             Control.initAlive(std::bind(&Service::Alive, this));
             std::string server_address("0.0.0.0:" + std::to_string(port));
-            std::cout << "Server is listenning in 0.0.0.0:" + std::to_string(port) << "\n";
+    //        std::cout << "Server is listenning in 0.0.0.0:" + std::to_string(port) << "\n";
             ServerBuilder builder;
             builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
             builder.RegisterService(&service);
@@ -331,7 +366,7 @@ class Service
             runningThread = std::thread([this] { serv -> Wait(); });
             log.push_back((EntryRPC("","",0)));
             Control.start();
-            /*     boost::this_thread::sleep_for(boost::chrono::milliseconds(10000));
+            /*     //boost::this_thread::sleep_for(boost::chrono::milliseconds(10000));
            if (leader==std::to_string(Port))
             {
                 puts("Shutdown");
@@ -353,13 +388,12 @@ class Service
     private:
         ServiceImpl service;
         std::unique_ptr<Server> serv;
-        std::thread runningThread;
-        int currentTerm = 0;
+        std::thread runningThread;;
         std::string votedFor = "";
         //uint16_t Port;
         std::string leader;
         heartbeat Control;
-        std::atomic<int> voteCnt;
+        std::atomic<int> voteCnt,currentTerm;
         std::vector<EntryRPC> log;
         int commitIndex = 0, lastApplied = 0;
         std::vector<int> nextIndex, matchIndex;
