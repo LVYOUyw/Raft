@@ -23,7 +23,6 @@ void Run(int port)
     Service tmp1;
     ExternalService tmp2;
     tmp1.Start(port);
-//    puts("W");
     tmp2.Start(port+5);
 }
 
@@ -31,13 +30,13 @@ int main(int argc, char** argv)
 {
 
     scanf("%d",&n);
-    for (int i=0;i<5;i++)
+/*    for (int i=0;i<1;i++)
     {
-        boost::thread th(boost::bind(Run,i+50051));
+        boost::thread th(boost::bind(Run,n));
         V.emplace_back(std::move(th));
     }
-    for (int i=0;i<5;i++)
-        if (V[i].joinable()) V[i].join();
-    //Run(n);
+    for (int i=0;i<1;i++)
+        if (V[i].joinable()) V[i].join();*/
+    Run(n);
     return 0;
 }
