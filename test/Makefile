@@ -38,7 +38,7 @@ vpath %.proto $(PROTOS_PATH)
 
 all: system-check  client
 
-client: external.pb.o external.grpc.pb.o client.o 
+client: external.pb.o external.grpc.pb.o client.o test_proto.pb.o test_proto.grpc.pb.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
  .PRECIOUS: %.grpc.pb.cc

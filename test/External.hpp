@@ -58,7 +58,7 @@ PutReply* reply)     override
     bool flag = Putt(PutRPC(request -> key(), request -> value()));
     while (!flag)
     {
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(1500));
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
         flag = Putt(PutRPC(request -> key(), request -> value()));
     }
     return Status::OK;
@@ -133,6 +133,7 @@ std::string Get(const std::string &message)
     GetV Req;
     GetV Rep;
     ClientContext cont;
+    //cont.set_deadline(std::chrono::system_clock::now() + std::chrono::milliseconds(1500));
     Req.set_key(message);
     tmp -> GetValue(&cont, Req, &Rep);
     return Rep.key();

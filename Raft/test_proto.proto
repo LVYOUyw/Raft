@@ -37,6 +37,7 @@ message AppendEntriesMessage
     int32 prevLogTerm = 4;
     repeated Entry entries = 5;
     int32 leaderCommit = 6;
+    int32 logsiz = 7;
 }
 
 message Reply

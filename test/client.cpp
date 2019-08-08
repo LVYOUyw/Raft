@@ -5,6 +5,7 @@
 #include <string>
 #include <cstdlib>
 #include <unordered_map>
+#include <unistd.h>
 #include <grpcpp/grpcpp.h>
 #include "external.grpc.pb.h"
 using grpc::Server;
@@ -42,7 +43,13 @@ std::string Get(const std::string& key)
     Req.set_key(key);
     auto status = stub_ -> Get(&cont, Req, &Rep);
     //std::cout<<key<<" "<<Rep.value()<<"\n";
-    return status.ok()?Rep.value():"QAQ";
+    if (!status.ok()) return "QAQ";
+    while (status.ok()&&Rep.value()=="")
+    {
+        sleep(1);
+        status = stub_ -> Get(&cont, Req, &Rep);
+    }
+    return Rep.value();
 }
 
 private:
@@ -53,6 +60,7 @@ private:
 int main(int argc, char **argv) {
   std::string cmd;
   int id=atoi(argv[1]);
+  int cnt = 0;
   while (std::cin.peek() != EOF) {
     std::string type;
     std::cin >> type;
@@ -65,6 +73,8 @@ int main(int argc, char **argv) {
 	  	  bool pd=c.Put(k,v);
 	  	  if (pd) break;
 	  }
+      cnt++;
+      std::cerr<<"Put: "<<cnt<<"\n";
     } else {
       std::string k,v;
       std::cin >> k;

@@ -1,0 +1,48 @@
+syntax = "proto3";
+package test;
+
+service Vergil
+{
+    rpc RequestVote (RequestVoteMessage) returns (Reply) {}
+    rpc AppendEntries (AppendEntriesMessage) returns (Reply) {}
+    rpc LeaderAppend (Entry) returns (Reply) {}
+    rpc GetValue (GetV) returns (GetV) {}
+}
+
+message GetV
+{
+    string key = 1;
+}
+
+message Entry
+{
+    int32 term = 1;
+    string key = 2;
+    string args = 3;
+}
+
+message RequestVoteMessage
+{
+    int32 term = 1;
+    string candidateID = 2;
+    int32 lastLogIndex = 3;
+    int32 lastLogTerm = 4;
+}
+
+message AppendEntriesMessage
+{
+    int32 term = 1;
+    string leaderID = 2;
+    int32 prevLogIndex = 3;
+    int32 prevLogTerm = 4;
+    repeated Entry entries = 5;
+    int32 leaderCommit = 6;
+    int32 logsiz = 7;
+}
+
+message Reply
+{
+    int32 term = 1;
+    bool ans = 2;
+    int32 logsiz = 3;
+}

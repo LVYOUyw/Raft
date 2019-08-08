@@ -41,6 +41,17 @@ class heartbeat
             state = 1;
         }
 
+        void ToLeader()
+        {
+            state = 3;
+        }
+
+        bool leader()
+        {
+            return state == 3;
+        }
+
+
         void Run()
         {
             boost::this_thread::disable_interruption di;
@@ -52,7 +63,7 @@ class heartbeat
                     {
                         boost::this_thread::restore_interruption ri(di);
                         //puts("sleep");
-                        boost::this_thread::sleep_for(boost::chrono::milliseconds(std::rand()%1500+1500));
+                        boost::this_thread::sleep_for(boost::chrono::milliseconds(std::rand()%150+150));
                     }
                     catch (boost::thread_interrupted)
                     {

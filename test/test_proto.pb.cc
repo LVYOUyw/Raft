@@ -157,6 +157,7 @@ const ::google::protobuf::uint32 TableStruct_test_5fproto_2eproto::offsets[] PRO
   PROTOBUF_FIELD_OFFSET(::test::AppendEntriesMessage, prevlogterm_),
   PROTOBUF_FIELD_OFFSET(::test::AppendEntriesMessage, entries_),
   PROTOBUF_FIELD_OFFSET(::test::AppendEntriesMessage, leadercommit_),
+  PROTOBUF_FIELD_OFFSET(::test::AppendEntriesMessage, logsiz_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::test::Reply, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -164,13 +165,14 @@ const ::google::protobuf::uint32 TableStruct_test_5fproto_2eproto::offsets[] PRO
   ~0u,  // no _weak_field_map_
   PROTOBUF_FIELD_OFFSET(::test::Reply, term_),
   PROTOBUF_FIELD_OFFSET(::test::Reply, ans_),
+  PROTOBUF_FIELD_OFFSET(::test::Reply, logsiz_),
 };
 static const ::google::protobuf::internal::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   { 0, -1, sizeof(::test::GetV)},
   { 6, -1, sizeof(::test::Entry)},
   { 14, -1, sizeof(::test::RequestVoteMessage)},
   { 23, -1, sizeof(::test::AppendEntriesMessage)},
-  { 34, -1, sizeof(::test::Reply)},
+  { 35, -1, sizeof(::test::Reply)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
@@ -192,22 +194,23 @@ const char descriptor_table_protodef_test_5fproto_2eproto[] =
   "\001 \001(\t\"0\n\005Entry\022\014\n\004term\030\001 \001(\005\022\013\n\003key\030\002 \001("
   "\t\022\014\n\004args\030\003 \001(\t\"b\n\022RequestVoteMessage\022\014\n"
   "\004term\030\001 \001(\005\022\023\n\013candidateID\030\002 \001(\t\022\024\n\014last"
-  "LogIndex\030\003 \001(\005\022\023\n\013lastLogTerm\030\004 \001(\005\"\225\001\n\024"
+  "LogIndex\030\003 \001(\005\022\023\n\013lastLogTerm\030\004 \001(\005\"\245\001\n\024"
   "AppendEntriesMessage\022\014\n\004term\030\001 \001(\005\022\020\n\010le"
   "aderID\030\002 \001(\t\022\024\n\014prevLogIndex\030\003 \001(\005\022\023\n\013pr"
   "evLogTerm\030\004 \001(\005\022\034\n\007entries\030\005 \003(\0132\013.test."
-  "Entry\022\024\n\014leaderCommit\030\006 \001(\005\"\"\n\005Reply\022\014\n\004"
-  "term\030\001 \001(\005\022\013\n\003ans\030\002 \001(\0102\316\001\n\006Vergil\0226\n\013Re"
-  "questVote\022\030.test.RequestVoteMessage\032\013.te"
-  "st.Reply\"\000\022:\n\rAppendEntries\022\032.test.Appen"
-  "dEntriesMessage\032\013.test.Reply\"\000\022*\n\014Leader"
-  "Append\022\013.test.Entry\032\013.test.Reply\"\000\022$\n\010Ge"
-  "tValue\022\n.test.GetV\032\n.test.GetV\"\000b\006proto3"
+  "Entry\022\024\n\014leaderCommit\030\006 \001(\005\022\016\n\006logsiz\030\007 "
+  "\001(\005\"2\n\005Reply\022\014\n\004term\030\001 \001(\005\022\013\n\003ans\030\002 \001(\010\022"
+  "\016\n\006logsiz\030\003 \001(\0052\316\001\n\006Vergil\0226\n\013RequestVot"
+  "e\022\030.test.RequestVoteMessage\032\013.test.Reply"
+  "\"\000\022:\n\rAppendEntries\022\032.test.AppendEntries"
+  "Message\032\013.test.Reply\"\000\022*\n\014LeaderAppend\022\013"
+  ".test.Entry\032\013.test.Reply\"\000\022$\n\010GetValue\022\n"
+  ".test.GetV\032\n.test.GetV\"\000b\006proto3"
   ;
 ::google::protobuf::internal::DescriptorTable descriptor_table_test_5fproto_2eproto = {
   false, InitDefaults_test_5fproto_2eproto, 
   descriptor_table_protodef_test_5fproto_2eproto,
-  "test_proto.proto", &assign_descriptors_table_test_5fproto_2eproto, 600,
+  "test_proto.proto", &assign_descriptors_table_test_5fproto_2eproto, 632,
 };
 
 void AddDescriptors_test_5fproto_2eproto() {
@@ -1380,6 +1383,7 @@ const int AppendEntriesMessage::kPrevLogIndexFieldNumber;
 const int AppendEntriesMessage::kPrevLogTermFieldNumber;
 const int AppendEntriesMessage::kEntriesFieldNumber;
 const int AppendEntriesMessage::kLeaderCommitFieldNumber;
+const int AppendEntriesMessage::kLogsizFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 AppendEntriesMessage::AppendEntriesMessage()
@@ -1397,8 +1401,8 @@ AppendEntriesMessage::AppendEntriesMessage(const AppendEntriesMessage& from)
     leaderid_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.leaderid_);
   }
   ::memcpy(&term_, &from.term_,
-    static_cast<size_t>(reinterpret_cast<char*>(&leadercommit_) -
-    reinterpret_cast<char*>(&term_)) + sizeof(leadercommit_));
+    static_cast<size_t>(reinterpret_cast<char*>(&logsiz_) -
+    reinterpret_cast<char*>(&term_)) + sizeof(logsiz_));
   // @@protoc_insertion_point(copy_constructor:test.AppendEntriesMessage)
 }
 
@@ -1407,8 +1411,8 @@ void AppendEntriesMessage::SharedCtor() {
       &scc_info_AppendEntriesMessage_test_5fproto_2eproto.base);
   leaderid_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   ::memset(&term_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&leadercommit_) -
-      reinterpret_cast<char*>(&term_)) + sizeof(leadercommit_));
+      reinterpret_cast<char*>(&logsiz_) -
+      reinterpret_cast<char*>(&term_)) + sizeof(logsiz_));
 }
 
 AppendEntriesMessage::~AppendEntriesMessage() {
@@ -1438,8 +1442,8 @@ void AppendEntriesMessage::Clear() {
   entries_.Clear();
   leaderid_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   ::memset(&term_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&leadercommit_) -
-      reinterpret_cast<char*>(&term_)) + sizeof(leadercommit_));
+      reinterpret_cast<char*>(&logsiz_) -
+      reinterpret_cast<char*>(&term_)) + sizeof(logsiz_));
   _internal_metadata_.Clear();
 }
 
@@ -1513,6 +1517,13 @@ const char* AppendEntriesMessage::_InternalParse(const char* begin, const char* 
       case 6: {
         if (static_cast<::google::protobuf::uint8>(tag) != 48) goto handle_unusual;
         msg->set_leadercommit(::google::protobuf::internal::ReadVarint(&ptr));
+        GOOGLE_PROTOBUF_PARSER_ASSERT(ptr);
+        break;
+      }
+      // int32 logsiz = 7;
+      case 7: {
+        if (static_cast<::google::protobuf::uint8>(tag) != 56) goto handle_unusual;
+        msg->set_logsiz(::google::protobuf::internal::ReadVarint(&ptr));
         GOOGLE_PROTOBUF_PARSER_ASSERT(ptr);
         break;
       }
@@ -1628,6 +1639,19 @@ bool AppendEntriesMessage::MergePartialFromCodedStream(
         break;
       }
 
+      // int32 logsiz = 7;
+      case 7: {
+        if (static_cast< ::google::protobuf::uint8>(tag) == (56 & 0xFF)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &logsiz_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0) {
@@ -1694,6 +1718,11 @@ void AppendEntriesMessage::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteInt32(6, this->leadercommit(), output);
   }
 
+  // int32 logsiz = 7;
+  if (this->logsiz() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(7, this->logsiz(), output);
+  }
+
   if (_internal_metadata_.have_unknown_fields()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         _internal_metadata_.unknown_fields(), output);
@@ -1744,6 +1773,11 @@ void AppendEntriesMessage::SerializeWithCachedSizes(
   // int32 leaderCommit = 6;
   if (this->leadercommit() != 0) {
     target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(6, this->leadercommit(), target);
+  }
+
+  // int32 logsiz = 7;
+  if (this->logsiz() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(7, this->logsiz(), target);
   }
 
   if (_internal_metadata_.have_unknown_fields()) {
@@ -1813,6 +1847,13 @@ size_t AppendEntriesMessage::ByteSizeLong() const {
         this->leadercommit());
   }
 
+  // int32 logsiz = 7;
+  if (this->logsiz() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->logsiz());
+  }
+
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
@@ -1857,6 +1898,9 @@ void AppendEntriesMessage::MergeFrom(const AppendEntriesMessage& from) {
   if (from.leadercommit() != 0) {
     set_leadercommit(from.leadercommit());
   }
+  if (from.logsiz() != 0) {
+    set_logsiz(from.logsiz());
+  }
 }
 
 void AppendEntriesMessage::CopyFrom(const ::google::protobuf::Message& from) {
@@ -1891,6 +1935,7 @@ void AppendEntriesMessage::InternalSwap(AppendEntriesMessage* other) {
   swap(prevlogindex_, other->prevlogindex_);
   swap(prevlogterm_, other->prevlogterm_);
   swap(leadercommit_, other->leadercommit_);
+  swap(logsiz_, other->logsiz_);
 }
 
 ::google::protobuf::Metadata AppendEntriesMessage::GetMetadata() const {
@@ -1910,6 +1955,7 @@ class Reply::HasBitSetters {
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int Reply::kTermFieldNumber;
 const int Reply::kAnsFieldNumber;
+const int Reply::kLogsizFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 Reply::Reply()
@@ -1922,15 +1968,15 @@ Reply::Reply(const Reply& from)
       _internal_metadata_(nullptr) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   ::memcpy(&term_, &from.term_,
-    static_cast<size_t>(reinterpret_cast<char*>(&ans_) -
-    reinterpret_cast<char*>(&term_)) + sizeof(ans_));
+    static_cast<size_t>(reinterpret_cast<char*>(&logsiz_) -
+    reinterpret_cast<char*>(&term_)) + sizeof(logsiz_));
   // @@protoc_insertion_point(copy_constructor:test.Reply)
 }
 
 void Reply::SharedCtor() {
   ::memset(&term_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&ans_) -
-      reinterpret_cast<char*>(&term_)) + sizeof(ans_));
+      reinterpret_cast<char*>(&logsiz_) -
+      reinterpret_cast<char*>(&term_)) + sizeof(logsiz_));
 }
 
 Reply::~Reply() {
@@ -1957,8 +2003,8 @@ void Reply::Clear() {
   (void) cached_has_bits;
 
   ::memset(&term_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&ans_) -
-      reinterpret_cast<char*>(&term_)) + sizeof(ans_));
+      reinterpret_cast<char*>(&logsiz_) -
+      reinterpret_cast<char*>(&term_)) + sizeof(logsiz_));
   _internal_metadata_.Clear();
 }
 
@@ -1986,6 +2032,13 @@ const char* Reply::_InternalParse(const char* begin, const char* end, void* obje
       case 2: {
         if (static_cast<::google::protobuf::uint8>(tag) != 16) goto handle_unusual;
         msg->set_ans(::google::protobuf::internal::ReadVarint(&ptr));
+        GOOGLE_PROTOBUF_PARSER_ASSERT(ptr);
+        break;
+      }
+      // int32 logsiz = 3;
+      case 3: {
+        if (static_cast<::google::protobuf::uint8>(tag) != 24) goto handle_unusual;
+        msg->set_logsiz(::google::protobuf::internal::ReadVarint(&ptr));
         GOOGLE_PROTOBUF_PARSER_ASSERT(ptr);
         break;
       }
@@ -2042,6 +2095,19 @@ bool Reply::MergePartialFromCodedStream(
         break;
       }
 
+      // int32 logsiz = 3;
+      case 3: {
+        if (static_cast< ::google::protobuf::uint8>(tag) == (24 & 0xFF)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &logsiz_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0) {
@@ -2079,6 +2145,11 @@ void Reply::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteBool(2, this->ans(), output);
   }
 
+  // int32 logsiz = 3;
+  if (this->logsiz() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(3, this->logsiz(), output);
+  }
+
   if (_internal_metadata_.have_unknown_fields()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         _internal_metadata_.unknown_fields(), output);
@@ -2100,6 +2171,11 @@ void Reply::SerializeWithCachedSizes(
   // bool ans = 2;
   if (this->ans() != 0) {
     target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(2, this->ans(), target);
+  }
+
+  // int32 logsiz = 3;
+  if (this->logsiz() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(3, this->logsiz(), target);
   }
 
   if (_internal_metadata_.have_unknown_fields()) {
@@ -2135,6 +2211,13 @@ size_t Reply::ByteSizeLong() const {
     total_size += 1 + 1;
   }
 
+  // int32 logsiz = 3;
+  if (this->logsiz() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->logsiz());
+  }
+
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
@@ -2168,6 +2251,9 @@ void Reply::MergeFrom(const Reply& from) {
   if (from.ans() != 0) {
     set_ans(from.ans());
   }
+  if (from.logsiz() != 0) {
+    set_logsiz(from.logsiz());
+  }
 }
 
 void Reply::CopyFrom(const ::google::protobuf::Message& from) {
@@ -2197,6 +2283,7 @@ void Reply::InternalSwap(Reply* other) {
   _internal_metadata_.Swap(&other->_internal_metadata_);
   swap(term_, other->term_);
   swap(ans_, other->ans_);
+  swap(logsiz_, other->logsiz_);
 }
 
 ::google::protobuf::Metadata Reply::GetMetadata() const {

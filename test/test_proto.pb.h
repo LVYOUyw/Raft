@@ -626,6 +626,12 @@ class AppendEntriesMessage final :
   ::google::protobuf::int32 leadercommit() const;
   void set_leadercommit(::google::protobuf::int32 value);
 
+  // int32 logsiz = 7;
+  void clear_logsiz();
+  static const int kLogsizFieldNumber = 7;
+  ::google::protobuf::int32 logsiz() const;
+  void set_logsiz(::google::protobuf::int32 value);
+
   // @@protoc_insertion_point(class_scope:test.AppendEntriesMessage)
  private:
   class HasBitSetters;
@@ -637,6 +643,7 @@ class AppendEntriesMessage final :
   ::google::protobuf::int32 prevlogindex_;
   ::google::protobuf::int32 prevlogterm_;
   ::google::protobuf::int32 leadercommit_;
+  ::google::protobuf::int32 logsiz_;
   mutable ::google::protobuf::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_test_5fproto_2eproto;
 };
@@ -749,6 +756,12 @@ class Reply final :
   bool ans() const;
   void set_ans(bool value);
 
+  // int32 logsiz = 3;
+  void clear_logsiz();
+  static const int kLogsizFieldNumber = 3;
+  ::google::protobuf::int32 logsiz() const;
+  void set_logsiz(::google::protobuf::int32 value);
+
   // @@protoc_insertion_point(class_scope:test.Reply)
  private:
   class HasBitSetters;
@@ -756,6 +769,7 @@ class Reply final :
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
   ::google::protobuf::int32 term_;
   bool ans_;
+  ::google::protobuf::int32 logsiz_;
   mutable ::google::protobuf::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_test_5fproto_2eproto;
 };
@@ -1189,6 +1203,20 @@ inline void AppendEntriesMessage::set_leadercommit(::google::protobuf::int32 val
   // @@protoc_insertion_point(field_set:test.AppendEntriesMessage.leaderCommit)
 }
 
+// int32 logsiz = 7;
+inline void AppendEntriesMessage::clear_logsiz() {
+  logsiz_ = 0;
+}
+inline ::google::protobuf::int32 AppendEntriesMessage::logsiz() const {
+  // @@protoc_insertion_point(field_get:test.AppendEntriesMessage.logsiz)
+  return logsiz_;
+}
+inline void AppendEntriesMessage::set_logsiz(::google::protobuf::int32 value) {
+  
+  logsiz_ = value;
+  // @@protoc_insertion_point(field_set:test.AppendEntriesMessage.logsiz)
+}
+
 // -------------------------------------------------------------------
 
 // Reply
@@ -1219,6 +1247,20 @@ inline void Reply::set_ans(bool value) {
   
   ans_ = value;
   // @@protoc_insertion_point(field_set:test.Reply.ans)
+}
+
+// int32 logsiz = 3;
+inline void Reply::clear_logsiz() {
+  logsiz_ = 0;
+}
+inline ::google::protobuf::int32 Reply::logsiz() const {
+  // @@protoc_insertion_point(field_get:test.Reply.logsiz)
+  return logsiz_;
+}
+inline void Reply::set_logsiz(::google::protobuf::int32 value) {
+  
+  logsiz_ = value;
+  // @@protoc_insertion_point(field_set:test.Reply.logsiz)
 }
 
 #ifdef __GNUC__
